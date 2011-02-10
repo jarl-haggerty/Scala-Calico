@@ -1,0 +1,39 @@
+package calico.dialog
+
+import swing.Dialog
+import swing.GridPanel
+import swing.Button
+import swing.TextField
+import swing.Label
+import swing.event.ButtonClicked
+
+class ResizeDialog(parent : CalicoFrame) extends Dialog(parent) {
+    val widthInput = new TextField
+    val heightInput = new TextField
+    val okButton = new Button("Ok")
+    val cancelButton = new Button("Cancel")
+    contents = new GridPanel(3, 2) {
+        contents += new Label("Width = ")
+        contents += widthInput
+        contents += new Label("Height = ")
+        contents += heightInput
+        contents += okButton
+        contents += cancelButton
+    }
+    
+    listenTo(okButton, cancelButton)
+    
+    reaction += {
+        case ButtonClicked(button) => {
+            button match {
+                case okButton => {
+                    parent.currentProject.currentLevel.dimensions = (widthInput.text.toInt, heightInput.text.toInt)
+                    close
+                }
+                case cancelButton => {
+                    close
+                }
+            }
+        }
+    }
+}

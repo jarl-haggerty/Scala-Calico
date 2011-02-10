@@ -1,0 +1,331 @@
+package calico
+
+import swing.MainFrame
+import swing.BorderPanel
+import swing.TabbedPane
+import java.awt.Component
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import java.io.File
+import scala.swing.ComboBox
+import scala.swing.FileChooser
+import scala.swing.GridBagPanel
+import scala.swing.GridBagPanel.Fill
+import scala.swing.ListView.Renderer
+import scala.swing.Menu
+import scala.swing.MenuBar
+import scala.swing.MenuItem
+import scala.swing.TabbedPane.Page
+import scala.swing.Dialog
+import scala.swing.Dialog.showMessage
+import scala.swing.event.SelectionChanged
+import scala.xml.Elem
+import scala.xml.Node
+import scala.xml.NodeSeq
+import scala.xml.XML
+import java.io.FileNotFoundException
+import java.io.FileWriter
+import javax.imageio.ImageIO
+import javax.swing.ImageIcon
+import javax.swing.JButton
+import scala.io.Source
+import scala.swing.Action
+import scala.swing.Alignment
+
+import calico.dialog.BackgroundDialog
+import calico.dialog.GridDialog
+import calico.dialog.RescaleDialog
+import calico.dialog.ResizeDialog
+import calico.dialog.ElementDialog
+
+class CalicoFrame extends MainFrame {
+    title = "Calico Editor 2.0"
+    this.iconImage = ImageIO.read(classOf[CalicoFrame].getResource("icons/cat.png"))
+
+    {
+        val temp = new File("resources")
+        if(!temp.exists) temp.mkdir
+    }
+
+    var _newElement : Elem = null
+    def newElement = {
+        if(_newElement != null){
+            val result = new CalicoElement(_newElement, panels.selection.page.content.asInstanceOf[CalicoPanel])
+            _newElement = null
+            result
+        }else{
+            null
+        }
+    }
+    def newElement_=(input : Elem) = _newElement = input
+    val toolbar = new Toolbar
+    var next = new JButton(new ImageIcon(classOf[CalicoFrame].getResource("icons/scenery.png")))
+    next.addActionListener(AddSceneryListener)
+    toolbar.peer.add(next)
+    next = new JButton(new ImageIcon(classOf[CalicoFrame].getResource("icons/ll.png")))
+    next.addActionListener(AddLLListener)
+    toolbar.peer.add(next)
+    next = new JButton(new ImageIcon(classOf[CalicoFrame].getResource("icons/lr.png")))
+    next.addActionListener(AddLRListener)
+    toolbar.peer.add(next)
+    next = new JButton(new ImageIcon(classOf[CalicoFrame].getResource("icons/ur.png")))
+    next.addActionListener(AddURListener)
+    toolbar.peer.add(next)
+    next = new JButton(new ImageIcon(classOf[CalicoFrame].getResource("icons/ul.png")))
+    next.addActionListener(AddULListener)
+    toolbar.peer.add(next)
+    next = new JButton(new ImageIcon(classOf[CalicoFrame].getResource("icons/rectangle.png")))
+    next.addActionListener(AddRectangleListener)
+    toolbar.peer.add(next)
+    next = new JButton(new ImageIcon(classOf[CalicoFrame].getResource("icons/ellipse.png")))
+    next.addActionListener(AddEllipseListener)
+    toolbar.peer.add(next)
+    toolbar.peer.setAlignmentX(Component.LEFT_ALIGNMENT)
+    val panels : TabbedPane = new TabbedPane
+    val tools : TabbedPane = new TabbedPane
+    val elementList = new CalicoList(this)
+    tools.pages += new Page("Element List", elementList)
+    var lastLevelFolder : File = null
+    var lastSceneryFolder : File = null
+
+    contents = new GridBagPanel {
+        val constraints = new Constraints
+        constraints.fill = Fill.Horizontal
+        constraints.weightx = 1
+        constraints.weighty = 0
+        constraints.gridx = 0
+        constraints.gridy = 0
+        constraints.gridwidth = 2
+        constraints.gridheight = 1
+        layout(toolbar) = constraints
+        constraints.fill = Fill.Both
+        constraints.gridy = 1
+        constraints.gridwidth = 1
+        constraints.weightx = 1
+        constraints.weighty = 1
+        layout(panels) = constraints
+        constraints.gridx = 1
+        constraints.weightx = 0
+        layout(tools) = constraints
+    }
+
+    object AddSceneryListener extends ActionListener {
+        def actionPerformed(e : ActionEvent) {
+            val fileChooser = if(lastSceneryFolder == null) new FileChooser(new File("resources")) else new FileChooser(lastSceneryFolder)
+            if (fileChooser.showOpenDialog(panels) == FileChooser.Result.Approve)
+            {
+                val file = fileChooser.selectedFile
+                val imageName = file.getAbsolutePath.substring(file.getAbsolutePath.lastIndexOf(File.separator) + 1)
+                Utils.copy(file.getAbsolutePath, "resources" + File.separator + imageName)
+                newElement = <Element>
+                                 <Property Key="Role" Value="Scenery"/>
+                                 <Property Key="Name" Value=""/>
+                                 <Property Key="X" Value="0"/>
+                                 <Property Key="Y" Value="0"/>
+                                 <Property Key="Width" Value="0"/>
+                                 <Property Key="Height" Value="0"/>
+                                 <Property Key="ViewX" Value="0"/>
+                                 <Property Key="ViewY" Value="0"/>
+                                 <Property Key="ImageLeft" Value="0"/>
+                                 <Property Key="ImageRight" Value="1"/>
+                                 <Property Key="ImageBottom" Value="0"/>
+                                 <Property Key="ImageTop" Value="1"/>
+                                 <Property Key="AttachedToView" Value="false"/>
+                                 <Property Key="CalicoDisplay" Value={imageName}/>
+                             </Element>
+                lastSceneryFolder = file.getParentFile
+            }
+        }
+    }
+
+    object AddLLListener extends ActionListener {
+        def actionPerformed(e : ActionEvent) {
+            newElement = <Element>
+                             <Property Key="Role" Value="Obstacle"/>
+                             <Property Key="Name" Value=""/>
+                             <Property Key="X" Value="0"/>
+                             <Property Key="Y" Value="0"/>
+                             <Property Key="Width" Value="0"/>
+                             <Property Key="Height" Value="0"/>
+                             <Property Key="ViewX" Value="0"/>
+                             <Property Key="ViewY" Value="0"/>
+                             <Property Key="ImageLeft" Value="0"/>
+                             <Property Key="ImageRight" Value="1"/>
+                             <Property Key="ImageBottom" Value="0"/>
+                             <Property Key="ImageTop" Value="1"/>
+                             <Property Key="AttachedToView" Value="false"/>
+                             <Property Key="CalicoDisplay" Value="LL"/>
+                         </Element>
+        }
+    }
+
+    object AddLRListener extends ActionListener {
+        def actionPerformed(e : ActionEvent) {
+            newElement = <Element>
+                             <Property Key="Role" Value="Obstacle"/>
+                             <Property Key="Name" Value=""/>
+                             <Property Key="X" Value="0"/>
+                             <Property Key="Y" Value="0"/>
+                             <Property Key="Width" Value="0"/>
+                             <Property Key="Height" Value="0"/>
+                             <Property Key="ViewX" Value="0"/>
+                             <Property Key="ViewY" Value="0"/>
+                             <Property Key="ImageLeft" Value="0"/>
+                             <Property Key="ImageRight" Value="1"/>
+                             <Property Key="ImageBottom" Value="0"/>
+                             <Property Key="ImageTop" Value="1"/>
+                             <Property Key="AttachedToView" Value="false"/>
+                             <Property Key="CalicoDisplay" Value="LR"/>
+                         </Element>
+        }
+    }
+
+    object AddURListener extends ActionListener {
+        def actionPerformed(e : ActionEvent) {
+            newElement = <Element>
+                             <Property Key="Role" Value="Obstacle"/>
+                             <Property Key="Name" Value=""/>
+                             <Property Key="X" Value="0"/>
+                             <Property Key="Y" Value="0"/>
+                             <Property Key="Width" Value="0"/>
+                             <Property Key="Height" Value="0"/>
+                             <Property Key="ViewX" Value="0"/>
+                             <Property Key="ViewY" Value="0"/>
+                             <Property Key="ImageLeft" Value="0"/>
+                             <Property Key="ImageRight" Value="1"/>
+                             <Property Key="ImageBottom" Value="0"/>
+                             <Property Key="ImageTop" Value="1"/>
+                             <Property Key="AttachedToView" Value="false"/>
+                             <Property Key="CalicoDisplay" Value="UR"/>
+                         </Element>
+        }
+    }
+
+    object AddULListener extends ActionListener {
+        def actionPerformed(e : ActionEvent) {
+            newElement = <Element>
+                             <Property Key="Role" Value="Obstacle"/>
+                             <Property Key="Name" Value=""/>
+                             <Property Key="X" Value="0"/>
+                             <Property Key="Y" Value="0"/>
+                             <Property Key="Width" Value="0"/>
+                             <Property Key="Height" Value="0"/>
+                             <Property Key="ViewX" Value="0"/>
+                             <Property Key="ViewY" Value="0"/>
+                             <Property Key="ImageLeft" Value="0"/>
+                             <Property Key="ImageRight" Value="1"/>
+                             <Property Key="ImageBottom" Value="0"/>
+                             <Property Key="ImageTop" Value="1"/>
+                             <Property Key="AttachedToView" Value="false"/>
+                             <Property Key="CalicoDisplay" Value="UL"/>
+                         </Element>
+        }
+    }
+
+    object AddRectangleListener extends ActionListener {
+        def actionPerformed(e : ActionEvent) {
+            newElement = <Element>
+                             <Property Key="Role" Value="Obstacle"/>
+                             <Property Key="Name" Value=""/>
+                             <Property Key="X" Value="0"/>
+                             <Property Key="Y" Value="0"/>
+                             <Property Key="Width" Value="0"/>
+                             <Property Key="Height" Value="0"/>
+                             <Property Key="ViewX" Value="0"/>
+                             <Property Key="ViewY" Value="0"/>
+                             <Property Key="ImageLeft" Value="0"/>
+                             <Property Key="ImageRight" Value="1"/>
+                             <Property Key="ImageBottom" Value="0"/>
+                             <Property Key="ImageTop" Value="1"/>
+                             <Property Key="AttachedToView" Value="false"/>
+                             <Property Key="CalicoDisplay" Value="Rectangle"/>
+                         </Element>
+        }
+    }
+
+    object AddEllipseListener extends ActionListener {
+        def actionPerformed(e : ActionEvent) {
+            newElement = <Element>
+                             <Property Key="Role" Value="Obstacle"/>
+                             <Property Key="Name" Value=""/>
+                             <Property Key="X" Value="0"/>
+                             <Property Key="Y" Value="0"/>
+                             <Property Key="Width" Value="0"/>
+                             <Property Key="Height" Value="0"/>
+                             <Property Key="ViewX" Value="0"/>
+                             <Property Key="ViewY" Value="0"/>
+                             <Property Key="ImageLeft" Value="0"/>
+                             <Property Key="ImageRight" Value="1"/>
+                             <Property Key="ImageBottom" Value="0"/>
+                             <Property Key="ImageTop" Value="1"/>
+                             <Property Key="AttachedToView" Value="false"/>
+                             <Property Key="CalicoDisplay" Value="Ellipse"/>
+                         </Element>
+        }
+    }
+
+    menuBar = new MenuBar {
+        contents += new Menu("File") {
+            contents += new MenuItem(Action("New") {
+                panels.pages += new Page("", new CalicoPanel(CalicoFrame.this))
+            })
+            contents += new MenuItem(Action("Close") {
+                panels.pages -= panels.selection.page
+            })
+            contents += new MenuItem(Action("Open") {
+                val fileChooser = if(lastLevelFolder == null) new FileChooser(new File(".")) else new FileChooser(lastLevelFolder)
+                if(fileChooser.showOpenDialog(panels) == FileChooser.Result.Approve) {
+                    val newPanel = new CalicoPanel(CalicoFrame.this, fileChooser.selectedFile)
+                    if(newPanel.good) {
+                        panels.pages += new Page(newPanel.title, newPanel)
+                    } else {
+                        Dialog.showMessage(panels, "Failed to load file", "Error", Dialog.Message.Error);
+                    }
+                }
+            })
+            contents += new MenuItem(Action("Save") {
+                panels.selection.page.content.asInstanceOf[CalicoPanel].save
+                panels.selection.page.title = panels.selection.page.content.asInstanceOf[CalicoPanel].title
+            })
+            contents += new MenuItem(Action("Save As") {
+                panels.selection.page.content.asInstanceOf[CalicoPanel].saveAs
+                panels.selection.page.title = panels.selection.page.content.asInstanceOf[CalicoPanel].title
+            })
+            contents += new MenuItem(Action("Quit") {
+                System.exit(0)
+            })
+        }
+        contents += new Menu("Edit") {
+            contents += new MenuItem(Action("Resize") {
+                new ResizeDialog(CalicoFrame.this) {
+                    visible = true
+                }
+            })
+            contents += new MenuItem(Action("Rescale") {
+                new RescaleDialog(CalicoFrame.this) {
+                    visible = true
+                }
+            })
+            contents += new MenuItem(Action("Set Grid") {
+                new GridDialog(CalicoFrame.this) {
+                    visible = true
+                }
+            })
+            contents += new MenuItem(Action("Set Background Color") {
+                new BackgroundDialog(CalicoFrame.this) {
+                    visible = true
+                }
+            })
+        }
+    }
+
+    def editElement(element : CalicoElement) = {
+        new ElementDialog(CalicoFrame.this, element) {
+            visible = true
+        }
+    }
+
+    def updateList = {
+        elementList.display.listData = panels.selection.page.content.asInstanceOf[CalicoPanel].elements
+    }
+}

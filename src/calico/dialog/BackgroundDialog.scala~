@@ -1,0 +1,44 @@
+package calico.dialog
+
+import scala.swing.Dialog
+import swing.GridPanel
+import swing.Button
+import swing.TextField
+import swing.Label
+import swing.event.ButtonClicked
+
+class BackgroundDialog(parent : CalicoFrame) extends Dialog(parent) {
+    title = "Select background color components"
+    
+    val redInput = new TextField(parent.currentProject.currentLevel.backgroundColor.getRed.toString)
+    val greenInput = new TextField(parent.currentProject.currentLevel.backgroundColor.getGreen.toString)
+    val blueInput = new TextField(parent.currentProject.currentLevel.backgroundColor.getBlue.toString)
+    val okButton = new Button("Ok")
+    val cancelButton = new Button("Cancel")
+    contents = new GridPanel(2, 2) {
+        contents += new Label("Red = ")
+        contents += redInput
+        contents += new Label("Green = ")
+        contents += greenInput
+        contents += new Label("Blue = ")
+        contents += blueInput
+        contents += okButton
+        contents += cancelButton
+    }
+    
+    listenTo(okButton, cancelButton)
+    
+    reaction += {
+        case ButtonClicked(button) => {
+            button match {
+                case okButton => {
+                    parent.levePane.selection.page.asInstanceOf[Level].backgroundColor = new Color(redInput.text.toInt, greenInput.text.toInt, blueInput.text.toInt)
+                    close
+                }
+                case cancelButton => {
+                    close
+                }
+            }
+        }
+    }
+}

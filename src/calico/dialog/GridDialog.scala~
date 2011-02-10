@@ -1,0 +1,36 @@
+package calico.dialog
+
+import swing.Dialog
+import swing.GridPanel
+import swing.Button
+import swing.TextField
+import swing.Label
+import swing.event.ButtonClicked
+
+class GridDialog(parent : CalicoFrame) extends Dialog(parent) {
+    val input = new TextField
+    val okButton = new Button("Ok")
+    val cancelButton = new Button("Cancel")
+    contents = new GridPanel(2, 2) {
+        contents += new Label("Grid Size = ")
+        contents += input
+        contents += okButton
+        contents += cancelButton
+    }
+    
+    listenTo(okButton, cancelButton)
+    
+    reaction += {
+        case ButtonClicked(button) => {
+            button match {
+                case okButton => {
+                    parent.currentProject.currentLevel.gridSize = input.text.toInt
+                    close
+                }
+                case cancelButton => {
+                    close
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,102 @@
+package calico;
+
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+/**
+ *
+ * @author jarl
+ */
+public class BackgroundDialog extends JDialog
+{
+    private JTextField redInput, greenInput, blueInput;
+    private CalicoFrame parent;
+
+    public BackgroundDialog(CalicoFrame parent)
+    {
+        super(parent, true);
+
+        this.parent = parent;
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+
+        JPanel redPanel = new JPanel();
+        redPanel.setLayout(new BoxLayout(redPanel, BoxLayout.X_AXIS));
+        redPanel.add(new JLabel("Red"));
+        redInput = new JTextField();
+        redPanel.add(redInput);
+        getContentPane().add(redPanel);
+
+        JPanel greenPanel = new JPanel();
+        greenPanel.setLayout(new BoxLayout(greenPanel, BoxLayout.X_AXIS));
+        greenPanel.add(new JLabel("Green"));
+        greenInput = new JTextField();
+        greenPanel.add(greenInput);
+        getContentPane().add(greenPanel);
+
+        JPanel bluePanel = new JPanel();
+        bluePanel.setLayout(new BoxLayout(bluePanel, BoxLayout.X_AXIS));
+        bluePanel.add(new JLabel("Blue"));
+        blueInput = new JTextField();
+        bluePanel.add(blueInput);
+        getContentPane().add(bluePanel);
+
+        JButton next;
+        JPanel button_panel = new JPanel();
+        button_panel.setLayout(new BoxLayout(button_panel, BoxLayout.X_AXIS));
+
+        next = new JButton("Cancel");
+        next.addActionListener(new CancelListener());
+        button_panel.add(next);
+        next = new JButton("Ok");
+        next.addActionListener(new OkListener());
+        button_panel.add(next);
+        getContentPane().add(button_panel);
+
+        pack();
+    }
+
+    void pop()
+    {
+        setLocation(parent.getX() + parent.getWidth()/2 - getWidth()/2, parent.getY() + parent.getHeight()/2 - getHeight()/2);
+        redInput.setText(String.valueOf(parent.getCurrentPanel().getBackgroundColor().getRed()));
+        greenInput.setText(String.valueOf(parent.getCurrentPanel().getBackgroundColor().getGreen()));
+        blueInput.setText(String.valueOf(parent.getCurrentPanel().getBackgroundColor().getBlue()));
+        setVisible(true);
+    }
+
+    class CancelListener implements ActionListener
+    {
+        public void actionPerformed(ActionEvent e)
+        {
+            setVisible(false);
+        }
+    }
+
+    class OkListener implements ActionListener
+    {
+        public void actionPerformed(ActionEvent e)
+        {
+            int red = Integer.parseInt(redInput.getText());
+            int green = Integer.parseInt(greenInput.getText());
+            int blue = Integer.parseInt(blueInput.getText());
+            if(red >= 0 && green >= 0 && blue >= 0 && red <= 255 && green <= 255 && blue <= 255)
+            {
+                parent.getCurrentPanel().setBackgroundColor(new Color(red, green, blue));
+            }
+            else
+            {
+                JOptionPane.showMessageDialog(BackgroundDialog.this, "Color components must be between 0 and 255.", "Resize error",
+                             JOptionPane.ERROR_MESSAGE);
+            }
+            setVisible(false);
+        }
+    }
+}
